@@ -1,1 +1,31 @@
-
+{
+  "name": "gemini-ai-chatbot",
+  "version": "1.0.0",
+  "description": "Gemini AI Chatbot with text, image, document, and audio processing capabilities",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "gemini-ai",
+    "chatbot",
+    "express",
+    "multer",
+    "file-upload"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "@google/genai": "^1.25.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "multer": "^2.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
