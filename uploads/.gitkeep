@@ -1,0 +1,7 @@
+## File: `uploads/.gitkeep` (buat folder uploads)
+
+Buat folder `uploads` dan di dalamnya buat file `.gitkeep` (file kosong) untuk menjaga folder tersebut tetap ada di Git:
+
+```bash
+mkdir uploads
+touch uploads/.gitkee
