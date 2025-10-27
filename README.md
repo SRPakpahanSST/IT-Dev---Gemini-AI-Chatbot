@@ -10,6 +10,8 @@ A powerful Express.js API that integrates with Google Gemini AI to provide text 
 - **Audio Transcription**: Transcribe and analyze audio files (MP3, WAV, M4A, FLAC, OGG)
 - **RESTful API**: Clean and simple API endpoints
 - **File Upload Support**: Multipart form data support via Multer
+- **CORS Enabled**: Cross-origin resource sharing support
+- **Environment Configuration**: Easy setup with environment variables
 
 ## 📋 Prerequisites
 
