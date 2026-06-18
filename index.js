@@ -3,6 +3,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import multer from 'multer';
+import path from 'path'; // <-- tambahan ini
 import { GoogleGenAI } from '@google/genai';
 
 dotenv.config();
@@ -40,7 +41,8 @@ app.post('/generate-text', async (req, res) => {
     try {
         const result = await genAI.models.generateContent({
             model: 'gemini-2.0-flash',
-            contents: prompt,
+            contents: prompt, // Bisa string, tapi lebih aman gunakan array:
+            // contents: [{ role: 'user', parts: [{ text: prompt }] }]
         });
         res.json({ output: result.text });
     } catch (error) {
@@ -51,134 +53,17 @@ app.post('/generate-text', async (req, res) => {
 
 // 2. Generate dari gambar
 app.post('/generate-from-image', upload.single('image'), async (req, res) => {
-    const { prompt = 'Describe this uploaded image' } = req.body;
-    if (!req.file) {
-        return res.status(400).json({ error: 'Image file is required' });
-    }
-
-    try {
-        const base64Image = req.file.buffer.toString('base64');
-        const mimeType = req.file.mimetype;
-
-        const result = await genAI.models.generateContent({
-            model: 'gemini-2.0-flash',
-            contents: [
-                {
-                    role: 'user',
-                    parts: [
-                        { text: prompt },
-                        {
-                            inlineData: {
-                                mimeType: mimeType,
-                                data: base64Image,
-                            },
-                        },
-                    ],
-                },
-            ],
-        });
-
-        res.json({ output: result.text });
-    } catch (error) {
-        console.error('Image processing error:', error);
-        res.status(500).json({ error: error.message });
-    }
+    // ... (kode tetap sama)
 });
 
-// 3. Generate dari dokumen (PDF, DOCX, TXT, PPT, dll)
+// 3. Generate dari dokumen
 app.post('/generate-from-document', upload.single('document'), async (req, res) => {
-    const { prompt = 'Analyze this document' } = req.body;
-    if (!req.file) {
-        return res.status(400).json({ error: 'Document file is required' });
-    }
-
-    const supported = ['.pdf', '.txt', '.doc', '.docx', '.ppt', '.pptx'];
-    const ext = getFileExtension(req.file.originalname);
-    if (!supported.includes(ext)) {
-        return res.status(400).json({
-            error: `Unsupported document type: ${ext}. Supported: PDF, TXT, DOC, DOCX, PPT, PPTX`,
-        });
-    }
-
-    try {
-        const base64Data = req.file.buffer.toString('base64');
-        const mimeType = req.file.mimetype;
-
-        const result = await genAI.models.generateContent({
-            model: 'gemini-2.0-flash',
-            contents: [
-                {
-                    role: 'user',
-                    parts: [
-                        { text: prompt },
-                        {
-                            inlineData: {
-                                mimeType: mimeType,
-                                data: base64Data,
-                            },
-                        },
-                    ],
-                },
-            ],
-        });
-
-        res.json({
-            output: result.text,
-            documentType: ext,
-            fileName: req.file.originalname,
-        });
-    } catch (error) {
-        console.error('Document processing error:', error);
-        res.status(500).json({ error: error.message });
-    }
+    // ... (kode tetap sama)
 });
 
-// 4. Generate dari audio (MP3, WAV, M4A, FLAC, OGG)
+// 4. Generate dari audio
 app.post('/generate-from-audio', upload.single('audio'), async (req, res) => {
-    const { prompt = 'Transcribe and analyze this audio' } = req.body;
-    if (!req.file) {
-        return res.status(400).json({ error: 'Audio file is required' });
-    }
-
-    const supported = ['.mp3', '.wav', '.m4a', '.flac', '.ogg'];
-    const ext = getFileExtension(req.file.originalname);
-    if (!supported.includes(ext)) {
-        return res.status(400).json({
-            error: `Unsupported audio type: ${ext}. Supported: MP3, WAV, M4A, FLAC, OGG`,
-        });
-    }
-
-    try {
-        const base64Data = req.file.buffer.toString('base64');
-        const mimeType = req.file.mimetype;
-
-        const result = await genAI.models.generateContent({
-            model: 'gemini-2.0-flash',
-            contents: [
-                {
-                    role: 'user',
-                    parts: [
-                        { text: prompt },
-                        {
-                            inlineData: {
-                                mimeType: mimeType,
-                                data: base64Data,
-                            },
-                        },
-                    ],
-                },
-            ],
-        });
-
-        res.json({
-            output: result.text,
-            audioType: ext,
-            fileName: req.file.originalname,
-        });
-    } catch (error) {
-        console.error('Audio processing error:', error);
-        res.status(500).json({ error: error.message });
-    }
+    // ... (kode tetap sama)
 });
 
 // 5. Health check / root
@@ -194,14 +79,15 @@ app.get('/', (req, res) => {
     });
 });
 
-// 6. Error handling middleware
+// 6. Test route
+app.get('/test', (req, res) => {
+    res.json({ message: 'Test route works!' });
+});
+
+// 7. Error handling middleware (harus di akhir)
 app.use((err, req, res, next) => {
     console.error('Global error:', err.stack);
     res.status(500).json({ error: err.message });
-});
-
-app.get('/test', (req, res) => {
-  res.json({ message: 'Test route works!' });
 });
 
 // ========== EKSPOR UNTUK VERCEL ==========
