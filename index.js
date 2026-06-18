@@ -41,9 +41,9 @@ app.post('/generate-text', async (req, res) => {
     try {
         const result = await genAI.models.generateContent({
             model: 'gemini-2.0-flash',
-            contents: prompt, // Bisa string, tapi lebih aman gunakan array:
-            // contents: [{ role: 'user', parts: [{ text: prompt }] }]
-        });
+            contents: [{ role: 'user', parts: [{ text: prompt }] }]
+});
+
         res.json({ output: result.text });
     } catch (error) {
         console.error('Generate text error:', error);
