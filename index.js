@@ -63,7 +63,6 @@ app.post('/generate-text', async (req, res) => {
         }
     }
 
-    // Jika semua gagal
     console.error('❌ Semua model gagal');
     return res.status(500).json({
         error: 'Gagal generate teks',
@@ -109,18 +108,107 @@ app.post('/generate-from-image', upload.single('image'), async (req, res) => {
     res.status(500).json({ error: lastError?.message || 'Image processing failed' });
 });
 
-// 3. Generate dari dokumen
+// 3. Generate dari dokumen (PDF, DOCX, TXT, PPT, dll)
 app.post('/generate-from-document', upload.single('document'), async (req, res) => {
-    // ... (sama dengan pola di atas, dapat disalin)
-    // Untuk singkatnya, saya tidak tulis ulang semua, tapi Anda bisa menambahkan.
+    const { prompt = 'Analyze this document' } = req.body;
+    if (!req.file) {
+        return res.status(400).json({ error: 'Document file is required' });
+    }
+    if (!genAI) {
+        return res.status(500).json({ error: 'API Key tidak ditemukan' });
+    }
+
+    const supported = ['.pdf', '.txt', '.doc', '.docx', '.ppt', '.pptx'];
+    const ext = getFileExtension(req.file.originalname);
+    if (!supported.includes(ext)) {
+        return res.status(400).json({
+            error: `Unsupported document type: ${ext}. Supported: PDF, TXT, DOC, DOCX, PPT, PPTX`,
+        });
+    }
+
+    const models = ['gemini-1.5-flash', 'gemini-pro'];
+    let lastError = null;
+
+    for (const model of models) {
+        try {
+            const base64Data = req.file.buffer.toString('base64');
+            const mimeType = req.file.mimetype;
+
+            const result = await genAI.models.generateContent({
+                model: model,
+                contents: [{
+                    role: 'user',
+                    parts: [
+                        { text: prompt },
+                        { inlineData: { mimeType, data: base64Data } }
+                    ]
+                }]
+            });
+            return res.json({
+                output: result.text,
+                model: model,
+                documentType: ext,
+                fileName: req.file.originalname,
+            });
+        } catch (error) {
+            lastError = error;
+        }
+    }
+
+    res.status(500).json({ error: lastError?.message || 'Document processing failed' });
 });
 
-// 4. Generate dari audio
+// 4. Generate dari audio (MP3, WAV, M4A, FLAC, OGG)
 app.post('/generate-from-audio', upload.single('audio'), async (req, res) => {
-    // ... (sama)
+    const { prompt = 'Transcribe and analyze this audio' } = req.body;
+    if (!req.file) {
+        return res.status(400).json({ error: 'Audio file is required' });
+    }
+    if (!genAI) {
+        return res.status(500).json({ error: 'API Key tidak ditemukan' });
+    }
+
+    const supported = ['.mp3', '.wav', '.m4a', '.flac', '.ogg'];
+    const ext = getFileExtension(req.file.originalname);
+    if (!supported.includes(ext)) {
+        return res.status(400).json({
+            error: `Unsupported audio type: ${ext}. Supported: MP3, WAV, M4A, FLAC, OGG`,
+        });
+    }
+
+    const models = ['gemini-1.5-flash', 'gemini-pro'];
+    let lastError = null;
+
+    for (const model of models) {
+        try {
+            const base64Data = req.file.buffer.toString('base64');
+            const mimeType = req.file.mimetype;
+
+            const result = await genAI.models.generateContent({
+                model: model,
+                contents: [{
+                    role: 'user',
+                    parts: [
+                        { text: prompt },
+                        { inlineData: { mimeType, data: base64Data } }
+                    ]
+                }]
+            });
+            return res.json({
+                output: result.text,
+                model: model,
+                audioType: ext,
+                fileName: req.file.originalname,
+            });
+        } catch (error) {
+            lastError = error;
+        }
+    }
+
+    res.status(500).json({ error: lastError?.message || 'Audio processing failed' });
 });
 
-// 5. Health check
+// 5. Health check / root
 app.get('/', (req, res) => {
     res.json({
         message: 'Gemini AI Chatbot API is running on Vercel',
@@ -138,7 +226,7 @@ app.get('/test', (req, res) => {
     res.json({ message: 'Test route works!' });
 });
 
-// 7. Error handling middleware
+// 7. Error handling middleware (harus di akhir)
 app.use((err, req, res, next) => {
     console.error('Global error:', err.stack);
     res.status(500).json({ error: err.message });
