@@ -200,6 +200,10 @@ app.use((err, req, res, next) => {
     res.status(500).json({ error: err.message });
 });
 
+app.get('/test', (req, res) => {
+  res.json({ message: 'Test route works!' });
+});
+
 // ========== EKSPOR UNTUK VERCEL ==========
 export default app;
 
